@@ -1,0 +1,17 @@
+type Query {
+  Get_Client(id: ID! ): clients_info
+  clietns: [clients_info]
+}
+
+
+type clients_info = {
+  __typename: string,
+  name: string,
+  ID: number,
+  address: string,
+  phone: string
+}
+
+schema {
+    query:Query
+}

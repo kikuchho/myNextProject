@@ -1,0 +1,588 @@
+
+import Image from 'next/image'
+import Layout from './layout'
+import Sidebar from './components/SideBar'
+import { FaIcons } from 'react-icons/fa'
+import { AiFillAmazonCircle } from 'react-icons/ai'
+import { FaTimes } from 'react-icons/fa'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import  Styles  from './thepage.module.css'
+
+
+import searchtable from './searchtable'
+
+import type { GetStaticProps } from 'next'
+
+
+import { ApolloClient, InMemoryCache, ApolloProvider, gql, HttpLink, useQuery } from '@apollo/client'
+
+import PollPage from './components/message'
+
+import createApolloClient from './components/apolloclient'
+
+import ThePage from './index'
+
+import ClientComponent from './components/clientcomponent'
+import ServerComponent from './components/servercomponent'
+
+
+import { getClient } from './lib/client'
+
+export const dynamic = "force-dynamic";
+
+  /*
+//firing up mock server 
+import('./mocks').then( ({setupMocks}) => {
+    setupMocks()
+  })
+
+*/
+
+
+type clients_info = {
+  __typename: string,
+  name: string,
+  ID: number,
+  address: string,
+  phone: string
+}
+
+
+
+type tabletype1 = {
+
+
+__typename: string,
+  name: string,
+  ID: number,
+  address: string,
+  phone: string
+}
+
+type tabletype2 = {
+clients_info:   clients_info[]
+}
+
+
+ //EXPERIMENTAL
+ 
+ const Get_Client = gql`
+  query MyQuery2 ($_eq1: String! ) {
+    clients_info(where: {ID: {_eq: $_eq1}}) {
+      ID
+      address
+      name
+      phone
+    }
+  }
+  
+
+`;
+
+
+async function GetData ( ) {
+  const client = new ApolloClient({
+    
+    uri: 'https://closing-muskrat-16.hasura.app/v1/graphql',
+     
+    cache: new InMemoryCache(),
+
+    //https://cloud.hasura.io/project/3246199a-0b78-493b-83e9-cb0f13ccda39/console/api/api-explorer
+    //if you take a look at the websites it shows you the request header and these are the things you need to make an api request 
+    //https://www.apollographql.com/docs/react/networking/basic-http-networking 
+    headers: {
+      'content-type' : 'application/json',
+      'x-hasura-admin-secret': 'GEBiWvxHO1XpFOhC17rJzg3KfLM05h73cy216qkOlraHyrFmSMi0Wds22mNuWTVO'
+    }
+  });
+
+ 
+
+  
+    
+    const { data } = await getClient().query({
+      query: gql`
+      query MyQuery2 {
+        clients_info {
+          ID
+          address
+          name
+          phone
+        }
+      }
+      `,
+    });
+
+    
+
+    console.log( ' from page.tsx 222222222222222222222' , data)
+
+
+    return data
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// this will call createapollocliient to use 
+
+export default async function Home( 
+  {
+    params,
+    searchParams,
+  }: {
+    params: { slug: string }
+    searchParams?: { [key: string]: string | string[] | undefined }
+  }
+
+
+) {
+
+//EXPERIMENTAL
+const selectedSearch = searchParams?.selected ?? "";
+let selected = Array.isArray(selectedSearch)
+  ? selectedSearch[0]
+  : selectedSearch;
+
+  console.log(' -----------------------------------------   ',searchParams)
+  console.log(' -----------------------------------------   ',searchParams?.selected)
+
+
+
+
+//my experimental fetch 
+
+
+  /*
+  const [isclikeced, setisclicked] = useState(false)
+  //will be used for displaying on table 
+  let theresult = '';
+   function setresult(fetchedresult : string) {
+
+      theresult = fetchedresult
+      setisclicked(!isclikeced);
+      console.log('updated', theresult)
+   }
+   */
+   
+  //refer to https://www.apollographql.com/docs/react/get-started for more detail, i copied the code from there 
+  const client = new ApolloClient({
+    
+    uri: 'https://closing-muskrat-16.hasura.app/v1/graphql',
+     
+    cache: new InMemoryCache(),
+
+    //https://cloud.hasura.io/project/3246199a-0b78-493b-83e9-cb0f13ccda39/console/api/api-explorer
+    //if you take a look at the websites it shows you the request header and these are the things you need to make an api request 
+    //https://www.apollographql.com/docs/react/networking/basic-http-networking 
+    headers: {
+      'content-type' : 'application/json',
+      'x-hasura-admin-secret': 'GEBiWvxHO1XpFOhC17rJzg3KfLM05h73cy216qkOlraHyrFmSMi0Wds22mNuWTVO'
+    }
+  });
+  
+  //TODO: write the code so that you can display the result to the table 
+  //TODO: line 221. write the code to send the search inputs to the callback function(thefetch)
+   
+  async function thefetch(){
+
+   client
+  .query({
+    query: gql`
+    query MyQuery2 {
+      clients_info {
+        ID
+        address
+        name
+        phone
+      }
+    }
+    `,
+  })
+  .then((result) => {   
+    
+    console.log(result, 'here is the client list' , result.data.clients_info   )
+   // setresult(result.data.clients_info[0].name)
+    return result
+
+  });
+  //the above coed will fetch the data from hasura
+  }
+
+
+  //const  res = await thefetch()
+
+  //console.log('after fetchcall : here is the client list ' , res  )
+// end of the experimental code 
+
+
+/*
+const { data } = await getClient().query({
+  query: gql`
+.....
+  `,
+});
+console.log( ' from page.tsx 111111111111111' , data) */
+const result  =  await GetData()
+
+console.log( 'data 1 :', result.clients_info[0], ' data 2: ', result.clients_info[1] , ' data3  ', result.clients_info[2]  )
+
+let IDs : number[] = [];
+let names : string[] = [];
+let phones : string[] = [] ;
+let addreses : string[] = [] ;
+let counter = 0;
+result.clients_info.forEach(( thedata : tabletype1 | any ) =>{
+   IDs[counter] = thedata.ID
+   names[counter] = thedata.name 
+   phones[counter] = thedata.phone
+   addreses[counter] = thedata.address
+
+   counter++ ; 
+})
+
+
+//EXPERIMENTAL 
+//regular expression
+if(selected=='')
+{
+  console.log( '======================================='  )
+  selected = 'empty';
+}
+
+if(selected.match(/^[0-9]+$/) != null)
+{
+    //if it is convertable to number , convert to number 
+    console.log('/////// not number',typeof selected)
+   //const convertedselected : number = Number(selected)
+   //console.log('/////// not number',typeof convertedselected)
+    console.log('/////// is number',typeof selected)
+}
+else{
+   console.log('/////// not number',typeof selected)
+   //const convertedselected : number = Number(selected)
+   //console.log('/////// not number',typeof convertedselected)
+   console.log( ' searched data  :  ', selected )
+   //const result  =  await SearchData( selected  )
+   ;
+}
+
+
+
+const keywords = selected.replace(" ", "");
+
+const keywords1 = "123abd67"
+
+const keywords2 = JSON.parse("1234567")
+
+const keywords3 = ("1234567")
+
+console.log( 'from line 286, page.tsx searched data  :  ', typeof keywords )
+//const { loading, error, data } = useQuery(Get_Client, { _eq1: keywords })
+
+
+const { data } = await getClient(  ).query({
+  query: gql`
+  query MyQuery2($ID1: String = keywords3) {
+  clients_info_by_pk(ID: $ID1) {
+    
+    ID
+    address
+    name
+    phone
+  }
+}
+  `, } )
+
+  console.log( '44444444444444444444444' ,data.clients_info_by_pk  )
+
+  /*
+  const {data: clients_info   } = useQuery<clients_info>(Get_Client, {
+    variables: { keywords },
+    notifyOnNetworkStatusChange: true
+  }  )
+  */
+
+
+
+
+
+
+
+
+
+
+
+//console.log(response.data)
+
+  /*
+  to display the fetched result, you need to implement this 
+
+  <ClientComponent>
+      <ServerComponent/>   <- this display the response 
+  </ClientComponent>
+
+
+  but you need can not use these component unlesss you remove useclient in this page.tsx 
+  TODO: migrate all the ALL usestate button useeffect to components folder  and remove use client on top 
+
+  */
+
+
+  // use classname='flex ' to lay links out horizontally 
+  // classname hidden , visible , invisible to remove elelemnt \
+  // use tanerny expression to change the width of the div element 
+  // classname = {...}  in ... we are using tailwind css 
+  return (
+    <>
+      <div>
+
+      </div>
+      <div className=' border-b bg-gray-300 h-12 flex items-center'>
+          <image className=' px-3'> logo </image>
+          <div className=' px-10 '>maintenance note</div>
+          <div>  </div>
+         
+      </div>
+
+      <div className='flex'>
+     
+          <Sidebar/>
+          
+
+          <ClientComponent theID = {IDs as number[]} thename={ names as string[] }  thephone={ phones as string[] }  searchresult={data}  >
+            <ServerComponent inputs = '1111'/>
+          </ClientComponent>
+             
+          
+      </div>
+
+
+        
+
+    </>
+
+
+
+
+    /*
+    data.clients_info[1].ID as number
+
+<div className="  w-screen h-screen flex items-center justify-center">
+            <div className="relative mb-4 flex  w-2/6  ">
+                  <input
+                    type="search"
+                    className="relative   block  min-w-0 flex-auto rounded-l border border-solid border-neutral-300 bg-transparent bg-clip-padding px-3 py-[0.25rem] text-base font-normal leading-[1.6] text-neutral-700 outline-none transition duration-200 ease-in-out focus:z-[3] focus:border-primary focus:text-neutral-700 focus:shadow-[inset_0_0_0_1px_rgb(59,113,202)] focus:outline-none dark:border-neutral-600 dark:text-neutral-200 dark:placeholder:text-neutral-200 dark:focus:border-primary"
+                    placeholder="Search"
+                    aria-label="Search"
+                    aria-describedby="button-addon1" />
+
+                  <button className=' ml-4' onClick={()=>{ thefetch()  }}>
+                    search
+                  </button >
+            </div>
+
+            <div>
+              <table className="table-auto bg-slate-200">
+                  <thead>
+                    <tr>
+                      <th>Song</th>
+                      <th>Artist</th>
+                      <th>Year</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>The Sliding Mr. Bones (Next Stop, Pottersville)</td>
+                      <td>Malcolm Lockyer</td>
+                      <td>   </td>
+                    </tr>
+                    <tr>
+                      <td>Witchy Woman</td>
+                      <td>The Eagles</td>
+                      <td>1972</td>
+                    </tr>
+                    <tr>
+                      <td>  <p>  </p>     </td>
+                      <td>Earth, Wind, and Fire</td>
+                      <td>1975</td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+
+
+
+          </div>
+
+
+     
+
+
+
+    */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      /*
+      <a className='group h-5'> 
+                  <p className=' invisible group-hover:visible '> test </p>
+                  <div className=' invisible relative ml-40 h-20 w-20  group-hover:visible  bg-rose-600 '>
+                    <p> test 2 </p>
+
+                  </div>
+                </a>
+
+
+      <p className={Styles.More}  > clickable  </p>
+                  <div className={Styles.DropDown}>
+                      <p > test2 </p>
+                  </div>
+
+
+
+
+        { // change logo based 
+                  ( open )
+                    ? <div> Something went wrong </div> 
+                    : <div> Everything in the world is fine </div> 
+                  }
+      */
+    /*
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
+        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+          Get started by editing&nbsp;
+          <code className="font-mono font-bold">app/page.tsx</code>
+        </p>
+        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
+          <a
+            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
+            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            By{' '}
+            <Image
+              src="/vercel.svg"
+              alt="Vercel Logo"
+              className="dark:invert"
+              width={100}
+              height={24}
+              priority
+            />
+          </a>
+        </div>
+      </div>
+
+      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
+        <Image
+          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
+          src="/next.svg"
+          alt="Next.js Logo"
+          width={180}
+          height={37}
+          priority
+        />
+      </div>
+
+      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
+        <a
+          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Docs{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Find in-depth information about Next.js features and API.
+          </p>
+        </a>
+
+        <a
+          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Learn{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Learn about Next.js in an interactive course with&nbsp;quizzes!
+          </p>
+        </a>
+
+        <a
+          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Templates{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Explore the Next.js 13 playground.
+          </p>
+        </a>
+
+        <a
+          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Deploy{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Instantly deploy your Next.js site to a shareable URL with Vercel.
+          </p>
+        </a>
+      </div>
+    </main> */
+  )
+ 
+}
+function forceUpdate() {
+  throw new Error('Function not implemented.')
+}
+

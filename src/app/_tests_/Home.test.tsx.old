@@ -1,0 +1,18 @@
+'use client'
+import Home from '@/app/page.tsx'
+import "@testing-library/jest-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { it } from 'node:test';
+
+
+//test('properly display , fetch data', () => {
+  // expect(    )
+///} )
+
+it('should have ...' , () => {
+  render( <Home />  )  //ARRANGE 
+
+  
+
+  //const myElem = screen
+})
